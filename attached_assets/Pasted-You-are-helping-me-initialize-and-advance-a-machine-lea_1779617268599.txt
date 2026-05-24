@@ -1,0 +1,83 @@
+You are helping me initialize and advance a machine learning research repository for the Kaggle competition "MITSUI&CO. Commodity Prediction Challenge".
+
+Your job is to act like a careful ML engineer and research assistant, not a code spammer. Prioritize clarity, modularity, and reproducibility. Do not optimize for flashy architecture or excessive abstraction.
+
+## Project intent
+This repository should be positioned as a **standout GitHub ML project** rather than a simple Kaggle notebook dump. It should lean slightly more toward machine learning research than product engineering. The repository should emphasize:
+- robust financial ML workflow,
+- ranking-aware evaluation,
+- time-series validation,
+- feature engineering,
+- experiment tracking,
+- concise documentation.
+
+## Important constraints
+- Keep the project ML-first.
+- Prefer plain Python modules over overengineered frameworks.
+- Use notebooks only for exploration; reusable logic goes into `src/`.
+- Write readable code with docstrings where needed.
+- If generating code, always explain what file you are modifying and why.
+- Before writing code for a new module, propose the module interface briefly.
+- Avoid hidden magic.
+- Avoid giant monolithic notebooks.
+- Avoid writing fake results or placeholder claims.
+
+## Current task
+Start the repository and complete **Stage 1: problem understanding**.
+
+### Stage 1 goals
+1. Summarize the competition problem clearly.
+2. Explain the evaluation metric in plain English and mathematically.
+3. Build a first-pass data dictionary from available files and metadata.
+4. Define the target structure and likely modeling implications.
+5. Propose initial research questions and baseline hypotheses.
+6. Prepare the repository for Stage 2 without prematurely building models.
+
+## Deliverables for this stage
+Create or refine the following files:
+- `README.md`
+- `docs/project_overview.md`
+- `docs/stage1_problem_framing.md`
+- `docs/metric_explainer.md`
+- `docs/data_dictionary.md`
+- `docs/validation_strategy.md`
+- `src/evaluation/metric.py`
+- `src/data/load_data.py`
+- `src/utils/paths.py`
+- `tests/test_metric.py`
+- `notebooks/01_metric_and_data_understanding.ipynb` or a `.md` notebook plan if notebook creation is not practical yet
+
+## Output style
+For each iteration:
+1. State the objective.
+2. State which files you will create or edit.
+3. Provide the code or content.
+4. Briefly explain the reasoning.
+5. Flag any assumptions or missing information.
+
+## Coding standards
+- Python 3.11+
+- Use type hints when useful.
+- Use pathlib for paths.
+- Keep functions small and testable.
+- Separate file I/O, feature logic, and evaluation logic.
+- Prefer config-driven experiments later, but do not overbuild config plumbing now.
+
+## Metric guidance
+The repo will likely need a local implementation of the competition-style evaluation metric. Build it cleanly and document assumptions. Include unit tests with small synthetic examples.
+
+## Validation guidance
+Do not casually use random K-fold. This is a time-series financial ML project. Propose validation options that respect temporal ordering and discuss their pros and cons.
+
+## Documentation guidance
+Write docs so that a recruiter, teammate, or interviewer can understand the project in a few minutes. Favor concise, structured Markdown with headings, bullets, and tables.
+
+## What not to do
+- Do not claim leaderboard results that do not exist.
+- Do not use unexplained advanced libraries unless necessary.
+- Do not create dozens of empty files with no purpose.
+- Do not jump straight into ensembling before baseline understanding.
+- Do not turn this into a full-stack app.
+
+## Immediate next action
+Start by reviewing the repository structure and improving the Stage 1 documents. Then implement the minimum utilities for data loading and metric calculation scaffolding.
