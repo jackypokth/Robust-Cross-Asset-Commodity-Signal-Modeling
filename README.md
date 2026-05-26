@@ -114,20 +114,3 @@ notebooks/
 | 2 | Active | EDA, feature engineering, first baseline model |
 | 3 | Planned | Walk-forward model selection across multiple folds |
 | 4 | Planned | Ensembling, final submission |
-
----
-
-## Notes
-
-- Competition data is gitignored — place downloaded files in `data/raw/`.
-- The metric implementation includes both the official Spearman-Sharpe score and a
-  faster Pearson proxy. See [`docs/metric_explainer.md`](docs/metric_explainer.md)
-  for when to use each.
-
----
-
-## Suggested GitHub About
-
-> Kaggle ML pipeline for commodity spread prediction. Spearman-Sharpe metric, walk-forward validation, no random K-fold.
-
-**Topics:** `kaggle`, `machine-learning`, `time-series`, `financial-ml`, `commodities`, `python`
