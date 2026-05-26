@@ -8,7 +8,7 @@ relative paths. This ensures the project works regardless of which
 directory a script is run from.
 
 Usage:
-    from src.utils.paths import DATA_RAW_DIR, DATA_PROCESSED_DIR
+    from src.utils.paths import DATA_RAW_DIR, TRAIN_FILE, LABELS_FILE
 """
 
 from pathlib import Path
@@ -31,8 +31,15 @@ DATA_PROCESSED_DIR: Path = DATA_DIR / "processed"
 # Competition data files (raw, as downloaded from Kaggle)
 # ---------------------------------------------------------------------------
 TRAIN_FILE: Path = DATA_RAW_DIR / "train.csv"
+LABELS_FILE: Path = DATA_RAW_DIR / "train_labels.csv"
 TEST_FILE: Path = DATA_RAW_DIR / "test.csv"
-SAMPLE_SUBMISSION_FILE: Path = DATA_RAW_DIR / "sample_submission.csv"
+TARGET_PAIRS_FILE: Path = DATA_RAW_DIR / "target_pairs.csv"
+
+# Per-lag test label files (provided separately for evaluation)
+TEST_LABELS_LAG: dict[int, Path] = {
+    lag: DATA_RAW_DIR / f"test_labels_lag_{lag}.csv"
+    for lag in (1, 2, 3, 4)
+}
 
 # ---------------------------------------------------------------------------
 # Output directories
@@ -67,13 +74,17 @@ def check_raw_data() -> dict[str, bool]:
     Example:
         >>> status = check_raw_data()
         >>> print(status)
-        {'train.csv': True, 'test.csv': False, 'sample_submission.csv': False}
+        {'train.csv': True, 'train_labels.csv': True, ...}
     """
-    files = {
+    files: dict[str, Path] = {
         "train.csv": TRAIN_FILE,
+        "train_labels.csv": LABELS_FILE,
         "test.csv": TEST_FILE,
-        "sample_submission.csv": SAMPLE_SUBMISSION_FILE,
+        "target_pairs.csv": TARGET_PAIRS_FILE,
     }
+    for lag in (1, 2, 3, 4):
+        files[f"test_labels_lag_{lag}.csv"] = TEST_LABELS_LAG[lag]
+
     return {name: path.exists() for name, path in files.items()}
 
 
@@ -84,5 +95,5 @@ if __name__ == "__main__":
     print()
     print("Raw data status:")
     for name, present in check_raw_data().items():
-        status = "FOUND" if present else "MISSING"
+        status = "FOUND  " if present else "MISSING"
         print(f"  {status}  {name}")
