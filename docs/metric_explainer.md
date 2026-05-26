@@ -1,90 +1,137 @@
-# Metric Explainer: Pearson Correlation (Row-wise Average)
+# Metric Explainer
 
-## Plain English
+## Official Competition Metric: Spearman-Sharpe Score
 
-The competition scores your predictions by measuring how well your **ranking of commodities** matches the actual ranking of commodity returns at each point in time.
+The official competition metric is a **Sharpe-like ratio of Spearman rank correlations**:
 
-At every time step in the test set:
-1. Look at your predicted return for each commodity.
-2. Look at the actual realized return for each commodity.
-3. Compute the Pearson correlation between your predictions and the actual returns across commodities.
-4. Repeat for every time step.
-5. **Average** all those per-period correlations to get your final score.
+$$\text{Score} = \frac{\overline{r^{\rho}}}{\sigma(r^{\rho})}$$
 
-A score of **1.0** means you perfectly ranked all commodities in every period.
-A score of **0.0** means your predictions are no better than random.
-A score of **-1.0** means you perfectly inverted every ranking (systematically wrong in a useful way).
+where $r^{\rho}_t$ is the **Spearman rank correlation** between predicted and actual
+target values across all 424 targets at time step $t$, and the mean and standard
+deviation are taken across all valid time steps.
 
 ---
 
-## Mathematical Definition
+## Step-by-Step Breakdown
 
-Let $T$ be the number of time steps and $N$ be the number of commodities.
+**Step 1 — Per time step, compute Spearman correlation.**
 
-For each time step $t$:
+At each time step $t$, rank all 424 predicted target values and all 424 actual target
+values separately. Compute the Pearson correlation of those two rank vectors:
 
-$$r_t = \text{PearsonCorr}(\hat{y}_t, y_t)$$
+$$r^{\rho}_t = \text{Spearman}(\hat{y}_t, y_t)$$
 
-where:
-- $\hat{y}_t \in \mathbb{R}^N$ — your predicted returns for all commodities at time $t$
-- $y_t \in \mathbb{R}^N$ — the actual realized returns for all commodities at time $t$
+Spearman correlation is $+1$ if your predicted ranking perfectly matches actual; $-1$
+if perfectly inverted; $0$ if uncorrelated.
 
-The Pearson correlation is:
+**Step 2 — Average the per-period correlations.**
 
-$$r_t = \frac{\sum_{i=1}^{N}(\hat{y}_{t,i} - \bar{\hat{y}}_t)(y_{t,i} - \bar{y}_t)}{\sqrt{\sum_{i=1}^{N}(\hat{y}_{t,i} - \bar{\hat{y}}_t)^2} \cdot \sqrt{\sum_{i=1}^{N}(y_{t,i} - \bar{y}_t)^2}}$$
+$$\overline{r^{\rho}} = \frac{1}{T} \sum_{t=1}^{T} r^{\rho}_t$$
 
-The final score is:
+**Step 3 — Divide by the standard deviation of per-period correlations.**
 
-$$\text{Score} = \frac{1}{T} \sum_{t=1}^{T} r_t$$
+$$\text{Score} = \frac{\overline{r^{\rho}}}{\text{std}(r^{\rho}_1, \ldots, r^{\rho}_T)}$$
+
+This is the final leaderboard score.
 
 ---
 
-## Key Properties
+## Why Divide by Standard Deviation?
+
+The denominator penalises **inconsistency**. A model with stable, moderate performance
+scores higher than one with occasional great predictions mixed with bad ones.
+
+| Model | Mean $r^\rho$ | Std $r^\rho$ | Score |
+|-------|--------------|-------------|-------|
+| Stable moderate | 0.30 | 0.10 | **3.00** |
+| Volatile | 0.30 | 0.60 | 0.50 |
+| Consistently bad | -0.10 | 0.05 | -2.00 |
+
+This mirrors the Sharpe ratio in portfolio theory: raw returns adjusted for volatility.
+
+---
+
+## Why Spearman, Not Pearson?
+
+**Spearman** is rank-based — it is invariant to any monotone transformation of the
+predictions. Predicting `[0.01, 0.02, 0.03]` or `[1, 4, 9]` gives the same Spearman
+score if the ranking is the same.
+
+**Pearson** is more sensitive to the scale and distribution of prediction magnitudes.
+In the presence of outlier targets (common in commodity spreads), Pearson can be
+distorted by a few extreme values. Spearman is more robust.
+
+For practical development, Pearson and Spearman often agree closely, which is why the
+offline proxy (Pearson) is still useful for quick iteration.
+
+---
+
+## Key Properties of the Official Metric
 
 | Property | Implication |
 |----------|-------------|
-| Scale-invariant | Predicting 0.01 or 100 for every commodity makes no difference if the ranking is the same |
-| Mean-shift-invariant | Adding a constant to all predictions doesn't change the score |
-| Computed per row (time step) | One very bad prediction period cannot be offset by many mediocre ones — it hurts the average |
-| NaN handling | If a time step has no valid predictions, it's typically excluded from the average |
-| Sensitive to outliers | Pearson assumes roughly linear relationship; extreme return outliers can distort the correlation |
+| Rank-based (Spearman) | Scale and distribution of predictions don't matter; only ranking does |
+| Sharpe-like denominator | Consistent models beat volatile ones with the same mean |
+| Computed per row (time step) | One bad period hurts your Sharpe ratio twice: bad mean AND high std |
+| NaN handling | Time steps with constant predictions are excluded |
+| Sensitive to consistency | Outlier predictions in single periods can collapse your score |
 
 ---
 
-## Intuition: Correlation vs. MSE
+## Offline Proxy: Mean Row-wise Pearson
 
-**MSE** penalizes prediction magnitude errors. Predicting +5% when actual is +3% is penalized.
+The repo also implements **mean row-wise Pearson correlation** (`mean_row_pearson` in
+`src/evaluation/metric.py`). This is:
 
-**Pearson correlation** only penalizes *ranking* errors. Predicting +2% (best) when actual return is +3% (best) is fine — you got the rank right, which is all that matters.
+$$\text{Proxy Score} = \frac{1}{T} \sum_{t=1}^{T} \text{PearsonCorr}(\hat{y}_t, y_t)$$
 
-This means:
-- You don't need to predict accurate return magnitudes.
-- You need to correctly identify which commodities will outperform vs. underperform *at each point in time*.
-- A model that predicts the right direction systematically — even with poor magnitude — scores well.
+**When to use the proxy:**
+- Quick sanity checks during feature engineering.
+- Verifying that predictions are not degenerate (constant, NaN).
+- Early-stage development where you want a fast signal.
 
----
+**When NOT to use the proxy as your final signal:**
+- Ranking models or comparing experiments.
+- Reporting results.
+- Anything that goes in a commit message or notebook conclusion.
 
-## Common Pitfalls
-
-1. **Optimizing MSE locally instead of correlation**: A model that minimizes squared error may not maximize correlation.
-2. **Treating this as a pure regression problem**: If you use MSE as your training loss without thinking about rankings, you may train a model that scores poorly on this metric.
-3. **Forgetting that the metric is per time step**: A model that averages predictions across time is effectively removing the time dimension, which destroys the cross-sectional signal.
+Always validate final results with `spearman_sharpe_score`.
 
 ---
 
 ## Local Metric Reference
 
-See `src/evaluation/metric.py` for the implementation.
-See `tests/test_metric.py` for validation tests.
+```python
+from src.evaluation.metric import spearman_sharpe_score, per_period_spearman
+from src.evaluation.metric import mean_row_pearson  # offline proxy only
+
+# Official metric
+score = spearman_sharpe_score(y_pred_df, y_true_df)
+
+# Diagnostic: per-period breakdown
+per_period = per_period_spearman(y_pred_df, y_true_df)
+print(per_period.describe())
+
+# Offline proxy (fast iteration)
+proxy = mean_row_pearson(y_pred_df, y_true_df)
+```
+
+See `tests/test_metric.py` for examples with known expected values.
 
 ---
 
-## Useful Approximation
+## Common Pitfalls
 
-Because the metric is correlation (not RMSE), you can think of this as a **cross-sectional ranking problem**:
+1. **Optimizing MSE instead of correlation**: MSE-minimizing models do not maximise
+   cross-sectional ranking. Train with a ranking-aware loss or use correlation directly.
 
-> At each time $t$, rank all commodities. Predict scores that produce the same ranking.
+2. **Ignoring the Sharpe denominator**: A model that produces high but volatile
+   correlation (e.g. great in trending markets, terrible in ranging markets) will score
+   poorly. Stability matters as much as mean performance.
 
-Any monotone transform of your predictions preserves the Pearson score:
-- Log, sigmoid, standardization — all fine
-- Winsorization may help with outlier stability
+3. **Using Pearson as the final metric**: Pearson and Spearman can diverge significantly
+   when outlier targets are present. Always confirm with `spearman_sharpe_score`.
+
+4. **Optimising on all 424 targets jointly without considering lags**: Targets at
+   different lags (1, 2, 3, 4) have different noise levels and autocorrelation
+   structures. Mixed-lag evaluation may hide lag-specific weaknesses.
