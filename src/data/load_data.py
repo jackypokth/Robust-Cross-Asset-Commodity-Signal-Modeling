@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -64,7 +63,7 @@ def _parse_dates(df: pd.DataFrame, date_col: str = "date") -> pd.DataFrame:
 def load_train(
     date_col: str = "date",
     parse_dates: bool = True,
-    path: Optional[Path] = None,
+    path: Path | None = None,
 ) -> pd.DataFrame:
     """Load the training dataset.
 
@@ -109,7 +108,7 @@ def load_train(
 def load_test(
     date_col: str = "date",
     parse_dates: bool = True,
-    path: Optional[Path] = None,
+    path: Path | None = None,
 ) -> pd.DataFrame:
     """Load the test dataset.
 
@@ -137,7 +136,7 @@ def load_test(
 
 
 def load_sample_submission(
-    path: Optional[Path] = None,
+    path: Path | None = None,
 ) -> pd.DataFrame:
     """Load the sample submission file.
 

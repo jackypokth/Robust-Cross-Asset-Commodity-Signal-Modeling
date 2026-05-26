@@ -20,7 +20,7 @@ References:
 from __future__ import annotations
 
 import warnings
-from typing import Literal
+from typing import Literal  # Literal stays; available natively in 3.8+
 
 import numpy as np
 import pandas as pd

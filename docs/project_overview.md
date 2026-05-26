@@ -9,29 +9,32 @@
 
 ---
 
-## Business Context
+## Problem Statement
 
-Mitsui & Co. is one of Japan's largest trading conglomerates with major exposure to commodity markets (energy, metals, agriculture). The competition reflects a real-world problem: **predicting near-future commodity price movements** to inform trading and risk management decisions.
+The task is to predict **future returns of a set of commodity assets** at each
+time step, where success is measured by how well the predicted returns *rank*
+the commodities relative to each other — not by the accuracy of the absolute
+return magnitudes.
 
-This is not a pure price-level prediction task. The goal is to predict **cross-sectional relative performance** of commodities — i.e., which commodities will go up or down relative to each other — rather than predicting absolute price levels. This framing makes it a **ranking problem** as much as a regression problem.
-
----
-
-## Prediction Task
-
-- **Input:** Historical price data, potentially supplemented by macroeconomic indicators, market signals, or other commodity-related features.
-- **Output:** Predicted future returns (or return ranks) for each commodity at each time step.
-- **Horizon:** Multi-step ahead forecasting across one or more prediction windows.
+This framing has direct modeling implications: the evaluation metric (Pearson
+correlation) is scale- and mean-shift-invariant within each time step. A model
+that correctly identifies relative winners and losers scores the same regardless
+of whether its predicted values are in percentage points or arbitrary units.
 
 ---
 
 ## Why This Problem Is Hard
 
-1. **Non-stationarity**: Commodity prices are driven by shifting supply/demand dynamics, geopolitical events, and weather — distributions change over time.
-2. **Low signal-to-noise ratio**: Financial return series are notoriously noisy; genuine predictive signal is weak.
-3. **Cross-sectional structure**: Predictions must be good in a *relative* sense, not just absolute — ranking aware metrics penalize systematic bias less than directional errors.
-4. **Temporal leakage risk**: Standard cross-validation splits will leak future information and produce overly optimistic estimates.
-5. **Limited sample size**: Financial time-series datasets are rarely large by ML standards.
+1. **Non-stationarity**: Commodity markets are driven by macro shocks, geopolitical
+   events, and supply dynamics — the generating distribution shifts over time.
+2. **Low signal-to-noise**: Financial return series are notoriously noisy. Genuine
+   predictive signal is weak and unstable across regimes.
+3. **Cross-sectional structure**: A good prediction at time $t$ must correctly order
+   *all* assets simultaneously, not just predict each one independently.
+4. **Temporal leakage**: Standard K-fold cross-validation leaks future information
+   into training, producing unrealistically optimistic validation scores.
+5. **Small effective sample size**: Financial datasets have long time spans but
+   limited independent observations once autocorrelation is accounted for.
 
 ---
 
@@ -39,16 +42,17 @@ This is not a pure price-level prediction task. The goal is to predict **cross-s
 
 | Principle | Implementation |
 |-----------|---------------|
-| Reproducibility | Fixed seeds, versioned data paths, explicit configs |
-| Separation of concerns | I/O in `src/data/`, logic in `src/evaluation/`, utils separate |
-| Test-driven metric | Metric implemented and tested before training |
-| Honest evaluation | No random K-fold; walk-forward only |
-| Documentation-first | Docs written alongside code, not after |
+| Reproducibility | Fixed seeds, centralised path config, explicit data download instructions |
+| Separation of concerns | I/O in `src/data/`, metric logic in `src/evaluation/`, paths in `src/utils/` |
+| Metric-first | Metric implemented and unit-tested before any model is trained |
+| Honest evaluation | No random K-fold; walk-forward splits only |
+| No overclaiming | Inferred data fields are flagged; no fabricated results |
 
 ---
 
-## Team and Timeline
+## Project Status
 
-- Solo / research project
-- Stage 1 (this stage): problem framing and tooling setup
-- Target: submission-ready pipeline by competition deadline
+- **Stage 1 (complete):** Problem framing, metric implementation, data loading
+  scaffold, validation strategy documentation.
+- **Stage 2 (planned):** EDA, feature engineering, baseline models.
+- **Stage 3+ (planned):** Walk-forward model selection, ensembling, submission.

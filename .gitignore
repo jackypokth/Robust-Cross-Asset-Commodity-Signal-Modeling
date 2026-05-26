@@ -44,9 +44,29 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Replit workspace files — not relevant to the Python ML project
 .cache/
 .local/
+.replit
+.replitignore
+.upm/
+.pythonlibs/
+replit.md
+
+# Replit pnpm/Node scaffold — unrelated to this ML project
+.npmrc
+artifacts/
+lib/
+scripts/
+node_modules/
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+tsconfig.json
+tsconfig.base.json
+
+# Session screenshots
+attached_assets/
 
 # Competition data — never commit
 data/raw/

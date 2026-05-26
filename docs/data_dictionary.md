@@ -1,6 +1,9 @@
 # Data Dictionary
 
-> **Status**: This dictionary is partially inferred from competition description and standard Kaggle commodity challenge conventions. Fields marked [INFERRED] must be verified after downloading competition data. Fields marked [CONFIRMED] are from the official competition page.
+> Fields marked **[INFERRED]** are based on the competition description and common
+> conventions for Kaggle financial prediction tasks. They must be verified after
+> downloading the competition data. Fields marked **[CONFIRMED]** have been verified
+> against the actual files.
 
 ---
 
@@ -8,93 +11,84 @@
 
 | File | Description |
 |------|-------------|
-| `train.csv` | Historical observations with targets for model training |
+| `train.csv` | Historical observations with target values for training |
 | `test.csv` | Observations for which predictions must be submitted |
-| `sample_submission.csv` | Correct submission format |
-| `supplemental_data.csv` | Additional contextual data (if provided) |
+| `sample_submission.csv` | Required submission format |
 
 ---
 
-## `train.csv` — Field Reference
+## `train.csv`
 
-| Column | Type | Description | Notes |
-|--------|------|-------------|-------|
-| `date` | date | Observation date (YYYY-MM-DD format) | [INFERRED] Frequency TBD — daily, weekly, or monthly |
-| `commodity` | string | Commodity identifier (e.g., "crude_oil", "copper") | [INFERRED] Categorical |
-| `target` | float | Future return to predict | [INFERRED] Likely log-return or % change |
-| `feature_*` | float | Engineered or raw input features | [INFERRED] Count and meaning TBD |
+| Column | Type | Description | Status |
+|--------|------|-------------|--------|
+| `date` | date | Observation date (YYYY-MM-DD) | [INFERRED] Frequency TBD |
+| `commodity` | string | Asset identifier | [INFERRED] |
+| `target` | float | Future return to predict | [INFERRED] Log-return or % change |
+| `feature_*` | float | Input features | [INFERRED] Count and names TBD |
 
 ---
 
-## `test.csv` — Field Reference
+## `test.csv`
 
-Same structure as `train.csv` but without the `target` column.
+Same structure as `train.csv`, without `target`.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `date` | date | Observation date |
-| `commodity` | string | Commodity identifier |
+| `commodity` | string | Asset identifier |
 | `feature_*` | float | Input features |
 
 ---
 
-## `sample_submission.csv` — Field Reference
+## `sample_submission.csv`
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | string or int | Row identifier matching test rows |
-| `target` | float | Your predicted return for this row |
+| `id` | string/int | Row identifier matching test rows |
+| `target` | float | Predicted return |
 
 ---
 
 ## Target Variable
 
-The target is the **future return** of a commodity. Specific assumptions (to verify):
+The target is a **future commodity return**. Key points for modeling:
 
-- Return horizon: likely 1-period ahead (but may be multi-horizon)
-- Return type: percentage change or log return
-- Return direction: positive = commodity appreciated; negative = depreciated
-
-**Why this matters for modeling:**
-- Log returns are better for Gaussian-assumption models (e.g., linear regression)
-- % returns are common in practice and may have heavier tails
-- The metric is Pearson correlation, so the precise scale doesn't affect scoring
+- Return horizon: likely 1-period ahead (verify from competition page).
+- The metric (Pearson correlation) is scale-invariant — the exact return units do
+  not affect the score.
+- Log returns have better Gaussian properties; % returns have heavier tails.
 
 ---
 
-## Commodities (Expected)
+## Commodity Universe (Expected)
 
-Standard commodity prediction competitions typically include assets from these categories:
+Competition likely covers a mix of:
 
 | Category | Examples |
 |----------|---------|
-| Energy | Crude Oil (WTI, Brent), Natural Gas, Heating Oil |
-| Metals | Gold, Silver, Copper, Aluminum, Platinum |
-| Agriculture | Corn, Wheat, Soybeans, Sugar, Cotton |
-| Soft commodities | Coffee, Cocoa |
+| Energy | Crude oil (WTI, Brent), natural gas |
+| Metals | Gold, silver, copper, aluminum |
+| Agriculture | Corn, wheat, soybeans |
 
-> Verify the exact list from `train.csv` after downloading data.
+> Verify the exact list from `train.csv` after downloading.
 
 ---
 
-## Feature Categories (Inferred)
+## Feature Categories (Expected)
 
-Based on common financial ML competitions, features likely include:
-
-| Category | Description |
-|----------|-------------|
-| Price history | Lagged returns at various horizons (1d, 5d, 20d, 60d) |
-| Technical indicators | Moving averages, RSI, Bollinger Bands, MACD |
+| Category | Examples |
+|----------|---------|
+| Lagged returns | 1-period, 5-period, 20-period lagged returns |
 | Volatility | Rolling standard deviation of returns |
-| Volume | Trading volume, open interest (if futures data) |
-| Cross-commodity | Returns of correlated commodities |
-| Macro | Interest rates, dollar index, risk sentiment proxies |
+| Technical | Moving averages, RSI (if included) |
+| Cross-asset | Returns of correlated commodities |
+| Macro | Dollar index, interest rate proxies (if included) |
 
 ---
 
-## Data Update Log
+## Update Log
 
-| Date | Update |
-|------|--------|
-| Stage 1 | Initial draft — fields inferred from competition context |
-| TBD | Update after downloading and inspecting actual data |
+| Stage | Entry |
+|-------|-------|
+| Stage 1 | Initial draft — all fields inferred, awaiting data download |
+| Stage 2 | *(to be filled after EDA)* |
